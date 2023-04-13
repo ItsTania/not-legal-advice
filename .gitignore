@@ -7,3 +7,6 @@ __pycache__
 # Avoid pushing keys to github
 .env
 .ipynb_checkpoints
+
+# Avoid pushing data
+data/*
