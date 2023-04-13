@@ -6,6 +6,4 @@ __pycache__
 
 # Avoid pushing keys to github
 .env
-
-# Avoid pushing notebooks used to develop the project
-*.ipynb*
+.ipynb_checkpoints
