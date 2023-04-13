@@ -5,6 +5,10 @@ import pinecone
 import streamlit as st
 from pydantic import BaseSettings
 
+# from src.download_docs_utils import *
+# from src.preprocess_docs_utils import *
+# from src.vector_database_utils import *
+# from src.gpt_utils import *
 
 # Load environment variables
 class Settings(BaseSettings):
@@ -12,6 +16,8 @@ class Settings(BaseSettings):
     PINECONE_API_KEY: str = "PINECONE_API_KEY"
     PINECONE_ENVIRONMENT: str = "PINECONE_ENVIRONMENT"
     INDEX_NAME: str = "INDEX_NAME"
+    EMBED_MODEL: str = "EMBED_MODEL"
+    QUERY_MODEL: str = "QUERY_MODEL"
 
     class Config:
         env_file = ".env"
@@ -30,17 +36,7 @@ pinecone.init(
 index = pinecone.Index(settings.INDEX_NAME)
 
 # Streamlit app
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.write(" ")
-with col2:
-    st.image("logo.png", width=40)
-
-with col3:
-    st.write(" ")
-
 st.title("Not Legal Advice: An AI tool to help you understand Australian law")
-
 
 st.write(
     """
@@ -49,15 +45,47 @@ st.write(
 )
 
 prompt = st.text_input(
-    "AI Prompt", "Eg. how many times can my rental agent enter my property?"
+    "Search", "Eg. how many times can my rental agent enter my property?"
 )
 
+# Slider to control number of documents to return
+num_docs = st.slider("Number of documents to return", 1, 10, 5)
+
 if st.button("Search"):
-    st.write("Searching...")
-    response = index.search(
-        query=prompt, query_by="prompt", filter_by="document_type:law", num_results=5
-    )
-    st.write("Done!")
-    st.write("Results:")
-    for result in response:
-        st.write(result)
+    with st.spinner(f"Searching through the {settings.INDEX_NAME} database..."):
+        # Embed the prompt
+        embedded_prompt = openai.Embedding.create(
+            input=[prompt],
+            engine=settings.EMBED_MODEL
+        )
+
+        # Search the index
+        res = index.query(embedded_prompt['data'][0]['embedding'], top_k=num_docs, include_metadata=True)
+
+        # Get the tests
+        contexts = [item['metadata']['text'] for item in res['matches']]
+        augmented_query = "\n\n---\n\n".join(contexts)+"\n\n-----\n\n"+prompt
+
+    with st.spinner(f"Asking {settings.QUERY_MODEL} for their interpretation..."):
+        # Define the primer to make it less likely to hallucinate nonsense
+        primer = f"""You are Q&A bot. A highly intelligent system that answers
+        user questions based on the information provided by the user above
+        each question. If the information can not be found in the information
+        provided by the user you truthfully say "I don't know".
+        """
+
+        # Send the augmented query to GPT-3
+        response = openai.ChatCompletion.create(
+            model=settings.QUERY_MODEL,
+            messages=[
+                {"role": "system", "content": primer},
+                {"role": "user", "content": augmented_query}
+            ]
+        )
+    st.write("Done! Here are the results:")
+    st.markdown(response['choices'][0]['message']['content'])
+
+    st.write("Here are the documents that were used to find the answer:")
+    for i, context in enumerate(contexts):
+        st.write(f"Document {i+1}:")
+        st.write(context)

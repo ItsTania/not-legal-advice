@@ -10,3 +10,4 @@ __pycache__
 
 # Avoid pushing data
 data/*
+!data/images/logo.png
