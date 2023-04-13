@@ -1,0 +1,82 @@
+import re
+import pinecone
+import numpy as np
+from transformers import AutoTokenizer, AutoModel
+import PyPDF2
+from docx import Document
+import torch
+def read_pdf_file(file_path):
+    with open(file_path, "rb") as file:
+        pdf_reader = PyPDF2.PdfReader(file)
+        content = "\n".join([pdf_reader.pages[i].extract_text() for i in range(len(pdf_reader.pages))])
+    return content
+
+def read_word_file(file_path):
+    doc = Document(file_path)
+    content = "\n".join([para.text for para in doc.paragraphs])
+    return content
+
+import os
+import numpy as np
+
+file_path = os.path.join(os.path.expanduser("~"), "Downloads", "1997-84.pdf")
+legislation_data = read_pdf_file(file_path)
+
+# Preprocess the legislation data
+sections = re.split(r'\n(?=\d+\.)', legislation_data)
+sections_dict = {i: sec.strip() for i, sec in enumerate(sections)}
+
+# Load a pre-trained language model and tokenizer
+model_name = "sentence-transformers/paraphrase-distilroberta-base-v1"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+# Function to convert text to embeddings
+def text_to_embedding(text):
+    tokens = tokenizer(text, padding=True, truncation=True, max_length=512, return_tensors="pt")
+    with torch.no_grad():
+        embeddings = model(**tokens).last_hidden_state[:, 0, :]
+    return embeddings.numpy()
+
+
+# Create embeddings for the legislation sections
+section_embeddings = np.vstack([text_to_embedding(section) for section in sections_dict.values()])
+
+# Initialize Pinecone
+pinecone.init(api_key="6d8d5ce3-6fca-42de-9f05-57dbe7fe5752", environment="asia-southeast1-gcp")
+
+# Create a Pinecone index
+index_name = "act-rental-legislation"
+embedding_size = model.config.hidden_size
+
+if index_name in pinecone.list_indexes():
+    pinecone.delete_index(index_name)  # Remove the index if it exists
+
+pinecone.create_index(name=index_name, metric="cosine", shards=1, dimension=embedding_size)
+
+
+# Upload the embeddings to Pinecone
+index = pinecone.Index(index_name)  # Create an Index object
+vectors = [pinecone.Vector(values=vec.tolist(), id=str(i)) for i, vec in enumerate(section_embeddings)]
+index.upsert(vectors=vectors)  # Call the upsert method on the Index object
+
+
+# Function to process queries and search the index
+def search_legislation(query):
+    query_embedding = text_to_embedding(query)
+    query_embedding = query_embedding.tolist()  # Convert the numpy array to a list
+    top_k = 5  # Number of top results to retrieve
+    results = index.query(queries=query_embedding, top_k=top_k)
+    return [(sections_dict[int(idx)], score) for idx, score in results]
+
+
+# Example query
+query = "What are the responsibilities of the landlord regarding repairs?"
+results = search_legislation(query)
+
+# Print the results
+for sec, score in results:
+    print(f"Section: {sec}\nScore: {score}\n")
+
+# Deinitialize Pinecone when done
+pinecone.deinit()
