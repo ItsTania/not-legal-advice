@@ -20,9 +20,9 @@ After cloning the repo, do the following to get started!
 4. Run the app
 
    ```bash
-   $ flask run
+   $ streamlit run app.py
    ```
 
 --------
 
-The project extends the OpenAI API [GPT4 Retrieval Augmentation tutorial](https://github.com/openai/openai-cookbook/blob/main/examples/vector_databases/pinecone/GPT4_Retrieval_Augmentation.ipynb). It uses the [Flask](https://flask.palletsprojects.com/en/2.0.x/) web framework. 
+The project extends the OpenAI API [GPT4 Retrieval Augmentation tutorial](https://github.com/openai/openai-cookbook/blob/main/examples/vector_databases/pinecone/GPT4_Retrieval_Augmentation.ipynb). It uses the [Flask](https://flask.palletsprojects.com/en/2.0.x/) web framework.
