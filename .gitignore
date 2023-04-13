@@ -1,0 +1,8 @@
+__pycache__
+.ds_store
+
+# Avoid pushing keys to github
+.env
+
+# Avoid pushing notebooks used to develop the project
+*.ipynb*
