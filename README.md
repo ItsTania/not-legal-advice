@@ -1,5 +1,7 @@
 # not-legal-advice
-Making law summaries accessible with AI and Natural Language Processing Tools
+A tool leveraging vector databases and generative large language model to make answering legal questions easier to understand.
+
+## Develop Your Own
 
 ## Quick Start
 
@@ -23,4 +25,4 @@ After cloning the repo, do the following to get started!
 
 --------
 
-The project extends the OpenAI API [quickstart tutorial](https://beta.openai.com/docs/quickstart). It uses the [Flask](https://flask.palletsprojects.com/en/2.0.x/) web framework. 
+The project extends the OpenAI API [GPT4 Retrieval Augmentation tutorial](https://github.com/openai/openai-cookbook/blob/main/examples/vector_databases/pinecone/GPT4_Retrieval_Augmentation.ipynb). It uses the [Flask](https://flask.palletsprojects.com/en/2.0.x/) web framework. 
