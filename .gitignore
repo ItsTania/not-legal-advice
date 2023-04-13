@@ -1,6 +1,9 @@
 __pycache__
 .ds_store
 
+# Don't push conda env
+.conda
+
 # Avoid pushing keys to github
 .env
 
