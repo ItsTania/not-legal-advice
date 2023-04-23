@@ -16,7 +16,7 @@ After cloning the repo, do the following to get started!
    ```bash
    $ cp .env.example .env
    ```
-3. Add your [API key](https://beta.openai.com/account/api-keys) and [Pinecone Key and Environment](https://app.pinecone.io/) to the newly created `.env` file (TODO: add our pinecone API key to access 
+3. Add your [API key](https://beta.openai.com/account/api-keys) and [Pinecone Key and Environment](https://app.pinecone.io/) to the newly created `.env` file (TODO: add our pinecone API key to access) 
 
 4. (Optional - to make intuative) download and embed relevant documents to start your vector database
 
