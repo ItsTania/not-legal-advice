@@ -45,7 +45,7 @@ st.write(
 )
 
 prompt = st.text_input(
-    "Search", "Eg. how many times can my rental agent enter my property?"
+    "", "Eg. how many times can my rental agent enter my property?"
 )
 
 # Slider to control number of documents to return
